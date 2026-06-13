@@ -1,0 +1,1100 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>NIRANKARI DENTAL CLINIC — Full Data Entry System</title>
+
+<!-- jsPDF CDN for invoice generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+  --brand:#0a67b1;
+  --muted:#6b7280;
+  --card:#ffffff;
+  --bg:#f1f6fb;
+  --accent:#0ea5a4;
+  --danger:#ef4444;
+  --glass: rgba(255,255,255,0.85);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;font-family:Inter,Segoe UI,system-ui,Roboto,"Helvetica Neue",Arial;
+  background:linear-gradient(180deg,#eef7ff 0%,var(--bg) 100%);
+  color:#0f1724;
+}
+header{
+  background:linear-gradient(90deg,var(--brand),#075a8a);
+  color:#fff;padding:18px 22px;display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(10,50,100,0.08);
+  flex-wrap:wrap;
+}
+header h1{margin:0;font-size:18px;letter-spacing:0.2px;flex:1;min-width:200px;}
+.wrap{max-width:1400px;margin:20px auto;padding:12px;}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:16px;
+}
+.card{
+  background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(11,35,61,0.06);
+  display:flex;flex-direction:column;
+}
+.small{font-size:13px;color:var(--muted);}
+label{font-weight:600;font-size:13px;display:block;margin-top:10px;}
+input[type="text"],input[type="number"],input[type="date"],select,textarea{
+  width:100%;padding:9px;border-radius:8px;border:1px solid #d1d5db;margin-top:6px;font-size:14px;
+}
+textarea{min-height:80px;resize:vertical;}
+button{background:var(--brand);color:#fff;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;}
+button.ghost{background:transparent;color:var(--brand);border:1px solid rgba(10,103,177,0.12);}
+.muted{color:var(--muted);font-size:13px;}
+.list{max-height:650px;overflow:auto;padding-right:6px;}
+.patient-row{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid #eef2f7;margin-bottom:8px;gap:10px;flex-wrap:wrap;}
+.patient-row:hover{box-shadow:0 4px 12px rgba(10,67,130,0.04);}
+.uid{font-weight:700;color:var(--brand);font-size:13px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.chip{background:#f3f9ff;padding:6px 8px;border-radius:999px;font-size:12px;color:var(--brand);border:1px solid rgba(10,103,177,0.06);}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+.section-title{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.two-col{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+.tooth-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(40px,1fr));gap:6px;margin-top:10px;}
+.tooth{background:#fff;border:1px solid #e6eef7;padding:8px;border-radius:6px;text-align:center;cursor:pointer;font-weight:600;}
+.tooth.active{background:linear-gradient(180deg,#0ea5a4,#0a67b1);color:#fff;border-color:transparent;}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(4,10,22,0.4);z-index:200;}
+.modal.open{display:flex;}
+.modal .card{width:100%;max-width:95%;max-height:90vh;overflow:auto;}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.pay-history{border-top:1px dashed #e6eef7;margin-top:10px;padding-top:10px;}
+.badge{background:#eef2ff;color:var(--brand);padding:6px 8px;border-radius:6px;font-weight:700;}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.search{flex:1;display:flex;gap:8px;}
+input.search-inp{padding:10px;border-radius:8px;border:1px solid #dbeafe;width:100%;min-width:150px;}
+.import-export{display:flex;gap:8px;flex-wrap:wrap;}
+.danger{background:var(--danger);color:white;}
+footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px;}
+.note{font-size:13px;color:var(--muted);margin-top:8px;}
+.img-thumb{height:80px;border-radius:6px;border:1px solid #e6eef7;object-fit:cover;}
+.img-list-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+@media(max-width:640px){
+  .two-col{grid-template-columns:1fr;}
+  .toolbar{flex-direction:column;align-items:stretch;}
+  .flex, .actions{flex-direction:column;align-items:stretch;}
+  header{flex-direction:column;align-items:flex-start;}
+  .patient-row{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="width:44px;height:44px;border-radius:8px;background:#fff;display:grid;place-items:center;color:var(--brand);font-weight:800">ND</div>
+  <div>
+    <h1>NIRANKARI DENTAL CLINIC — Data Entry System</h1>
+    <div class="small">" हर मुस्कान मायने रखती है "</div>
+  </div>
+  <div style="margin-left:auto" id="loginArea"></div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- LEFT: Patient Form & Tools -->
+    <div class="card">
+      <div class="section-title">
+        <div>
+          <div class="small">New / Edit Patient</div>
+          <div style="font-weight:800;font-size:18px" id="formTitle">Register Patient</div>
+        </div>
+        <div class="flex">
+          <div class="badge" id="clinicBadge">Clinic: NIRANKARI DENTAL CLINIC</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>UID (auto)</label>
+        <input id="uid" readonly>
+
+        <label>Full Name</label>
+        <input id="fullname" placeholder="e.g., Rahul Sharma">
+
+        <div class="two-col">
+          <div>
+            <label>Age</label>
+            <input id="age" type="number" min="0">
+          </div>
+          <div>
+            <label>Sex</label>
+            <select id="sex">
+              <option>Male</option><option>Female</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Contact</label>
+        <input id="contact" placeholder="phone or email">
+
+        <label>Address</label>
+        <input id="address" placeholder="street, city">
+
+        <label>Date of Visit</label>
+        <input id="visitDate" type="date">
+
+        <label>Medical History / Notes</label>
+        <textarea id="history" placeholder="allergies, medications..."></textarea>
+
+        <label>Primary Treatment</label>
+        <div style="display:flex;gap:8px">
+          <select id="primaryTreatment" style="flex:2">
+            <option value="General Check-up">General Check-up</option>
+            <option value="Orthodontic Braces">Orthodontic Braces</option>
+            <option value="RCT">RCT Procedure</option>
+            <option value="Restoration - Temporary">Restoration - Temporary</option>
+            <option value="Restoration - Permanent">Restoration - Permanent</option>
+            <option value="Gum Treatment">Gum Treatment</option>
+            <option value="Extraction">Extraction</option>
+            <option value="Scaling & Polishing">Scaling & Polishing</option>
+            <option value="Crown/Bridge">Crown/Bridge</option>
+            <option value="Implant">Implant</option>
+          </select>
+          <input id="primaryPrice" type="number" placeholder="Price (₹)" style="width:130px;flex:0 0 130px">
+        </div>
+
+        <label>Upload X-ray / Image(s)</label>
+        <input id="imgUpload" type="file" accept="image/*" multiple>
+        <div id="imgPreview" style="margin-top:8px"></div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button id="saveBtn">Save Patient</button>
+          <button class="ghost" id="clearForm">Clear</button>
+          <button class="ghost" id="newUID">New UID</button>
+        </div>
+
+        <div class="note">Tip: Click a patient from the list to open detailed view (edit, treatments, payments). You may enter a price for each treatment/procedure.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Patient List & Dashboard -->
+    <div>
+      <div class="card" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;gap:12px;align-items:center;width:100%">
+          <div class="toolbar" style="flex:1">
+            <div style="width:260px">
+              <input class="search-inp" id="searchInp" placeholder="Search by name, UID, contact or treatment">
+            </div>
+            <select id="filterTreatment" style="padding:8px;border-radius:8px;border:1px solid #dbeafe">
+              <option value="">All Treatments</option>
+              <option>General Check-up</option>
+              <option>Orthodontic Braces</option>
+              <option>RCT</option>
+              <option>Restoration - Temporary</option>
+              <option>Restoration - Permanent</option>
+              <option>Gum Treatment</option>
+              <option>Extraction</option>
+              <option>Scaling & Polishing</option>
+              <option>Crown/Bridge</option>
+              <option>Implant</option>
+            </select>
+            <div style="margin-left:auto" class="import-export">
+              <button class="ghost" id="exportBtn">Export JSON</button>
+              <button class="ghost" id="importBtn">Import JSON</button>
+              <input id="importFile" type="file" accept=".json" style="display:none">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card list" id="patientList">
+        <!-- patient rows inserted here -->
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="ghost" id="clearAll">Clear All Data</button>
+        <button id="seedData">Seed Demo Data</button>
+      </div>
+
+      <footer>
+        <div>Built with ❤️ — NIRANKARI DENTAL CLINIC Data System</div>
+        <div class="small">Local-only demo. For multi-user/cloud integration, choose Firebase / REST API upgrade.</div>
+      </footer>
+    </div>
+  </div>
+</div>
+
+<!-- Patient Detail Modal -->
+<div id="patientModal" class="modal" aria-hidden="true">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="small">Patient</div>
+        <div style="font-weight:800;font-size:18px" id="mName"></div>
+        <div class="small" id="mUID"></div>
+      </div>
+      <div class="flex">
+        <button class="ghost" id="downloadPDF">Download Invoice PDF</button>
+        <button id="closeModal">Close</button>
+      </div>
+    </div>
+
+    <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7">
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:12px">
+      <div>
+        <h3 style="margin:6px 0">Info</h3>
+        <div class="two-col">
+          <div><div class="small">Age</div><div id="mAge"></div></div>
+          <div><div class="small">Sex</div><div id="mSex"></div></div>
+        </div>
+        <div style="margin-top:8px">
+          <div class="small">Contact</div><div id="mContact"></div>
+        </div>
+        <div style="margin-top:8px">
+          <div class="small">Address</div><div id="mAddress"></div>
+        </div>
+
+        <h3 style="margin-top:12px">Medical History</h3>
+        <div id="mHistory" class="muted"></div>
+
+        <h3 style="margin-top:12px">Treatments & Modules</h3>
+
+        <!-- Treatment quick-add -->
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="quickTreatment" style="padding:8px;border-radius:8px;flex:2">
+            <option>General Check-up</option>
+            <option>Orthodontic Braces</option>
+            <option>RCT</option>
+            <option>Restoration - Temporary</option>
+            <option>Restoration - Permanent</option>
+            <option>Gum Treatment</option>
+            <option>Extraction</option>
+            <option>Scaling & Polishing</option>
+            <option>Crown/Bridge</option>
+            <option>Implant</option>
+          </select>
+          <input id="quickTreatmentPrice" type="number" placeholder="Price (₹)" style="width:120px">
+          <button id="addTreatmentBtn" class="ghost">Add</button>
+        </div>
+
+        <div id="treatmentList" class="chips" style="margin-top:10px"></div>
+
+        <!-- RCT Module -->
+        <div style="margin-top:14px">
+          <h4>RCT Module</h4>
+          <div class="row">
+            <div style="flex:1">
+              <label>Tooth No.</label>
+              <input id="rctTooth" placeholder="e.g., 36">
+            </div>
+            <div style="width:160px">
+              <label>Procedure Date</label>
+              <input id="rctDate" type="date">
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div style="flex:1">
+              <label>Stage</label>
+              <select id="rctStage">
+                <option>Access opening</option>
+                <option>Working length & Prep</option>
+                <option>Obturation</option>
+                <option>Follow-up</option>
+              </select>
+            </div>
+            <div style="width:140px">
+              <label>Price (₹)</label>
+              <input id="rctPrice" type="number" placeholder="optional">
+            </div>
+          </div>
+          <label>Notes</label>
+          <textarea id="rctNotes"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="addRct">Add RCT Visit</button>
+            <button class="ghost" id="clearRct">Clear</button>
+          </div>
+
+          <div id="rctList" style="margin-top:10px"></div>
+        </div>
+
+        <!-- Restoration Module -->
+        <div style="margin-top:14px">
+          <h4>Restoration</h4>
+          <div class="row">
+            <input id="restTooth" placeholder="Tooth no." style="width:100px">
+            <select id="restType">
+              <option>Temporary</option><option>Permanent</option>
+            </select>
+            <input id="restShade" placeholder="Shade (optional)">
+            <input id="restPrice" type="number" placeholder="Price (₹)" style="width:120px">
+          </div>
+          <label>Notes</label>
+          <textarea id="restNotes"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="addRest">Add Restoration</button>
+          </div>
+          <div id="restList" style="margin-top:10px"></div>
+        </div>
+
+        <!-- Gum Treatment -->
+        <div style="margin-top:14px">
+          <h4>Gum / Periodontal</h4>
+          <div class="row">
+            <select id="gumType">
+              <option>Scaling</option><option>Root planing</option><option>Deep cleaning</option><option>Periodontal exam</option>
+            </select>
+            <input id="gumDate" type="date" style="width:160px">
+            <input id="gumPrice" type="number" placeholder="Price (₹)" style="width:120px">
+          </div>
+          <label>Notes</label>
+          <textarea id="gumNotes"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="addGum">Add Gum Entry</button>
+          </div>
+          <div id="gumList" style="margin-top:10px"></div>
+        </div>
+
+      </div>
+
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div class="small">Payments</div><div style="font-weight:700" id="balanceLabel">Balance ₹0</div></div>
+          <div class="small">Payment methods: Cash / UPI</div>
+        </div>
+
+        <div style="margin-top:8px">
+          <label>Payment Method</label>
+          <select id="payMethod"><option>Cash</option><option>UPI</option></select>
+          <label>Amount</label>
+          <input id="payAmount" type="number" min="0">
+          <label>Notes</label>
+          <input id="payNotes" placeholder="transaction id / UPI ref">
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="addPayment">Add Payment</button>
+            <button class="ghost" id="refundPayment">Refund (demo)</button>
+          </div>
+
+          <div class="pay-history" id="payHistory"></div>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7">
+
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div class="small">Dental Chart</div><div class="muted">Click a tooth to mark</div></div>
+            <div><button class="ghost" id="clearToothMarks">Clear Marks</button></div>
+          </div>
+          <div class="tooth-grid" id="toothGrid"></div>
+          <div style="margin-top:8px" id="toothMarksList"></div>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7">
+
+        <div>
+          <div class="small">Images / X-rays</div>
+          <input id="modalImgUpload" type="file" accept="image/*" multiple style="margin-top:8px">
+          <div id="imgList" style="margin-top:8px"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button id="deletePatient" class="danger">Delete Patient</button>
+      <button id="savePatientEdits">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* -----------------------------
+  NIRANKARI DENTAL CLINIC Data System
+   - Single-file client-side app
+   - Data persisted in localStorage
+   - Price per treatment (user-entered)
+------------------------------*/
+
+const STORAGE_KEY = "nirankari_dental_db_v1";
+let DB = { patients: [], users: [] };
+let currentUser = null;
+let editingUID = null;
+let tempFormImages = []; // hold images selected in the main form before save
+let tempModalImages = []; // hold images added in modal before saving
+
+// ---------- Utilities ----------
+function uid() {
+  const time = Date.now().toString(36).toUpperCase();
+  const rand = Math.random().toString(36).slice(2,7).toUpperCase();
+  return `ND-${time}-${rand}`;
+}
+function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+function loadDB(){ const raw = localStorage.getItem(STORAGE_KEY); DB = raw ? JSON.parse(raw) : {patients:[], users:[]}; }
+function findPatient(u){ return DB.patients.find(p=>p.uid===u); }
+function money(n){ return "₹" + (Number(n)||0).toFixed(2); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+// ---------- Initial setup ----------
+loadDB();
+if(!DB.users || DB.users.length===0){
+  DB.users = [
+    {user:'reception',pass:'1234',role:'receptionist',name:'Reception'},
+    {user:'doctor',pass:'1234',role:'doctor',name:'Dr. Admin'}
+  ];
+  saveDB();
+}
+renderLoginArea();
+renderPatientList();
+initForm();
+
+/* -------------------------
+   LOGIN UI (simple local)
+--------------------------*/
+function renderLoginArea(){
+  const area = document.getElementById('loginArea');
+  area.innerHTML = '';
+  if(!currentUser){
+    const loginBtn = document.createElement('button');
+    loginBtn.textContent = 'Login';
+    loginBtn.className = 'ghost';
+    loginBtn.onclick = openLoginModal;
+    area.appendChild(loginBtn);
+  } else {
+    const span = document.createElement('div');
+    span.innerHTML = `<div style="text-align:right"><div style="font-weight:700">${currentUser.name}</div><div class="small">${currentUser.role}</div></div>`;
+    area.appendChild(span);
+    const out = document.createElement('button');
+    out.textContent = 'Logout';
+    out.onclick = ()=>{ currentUser=null; renderLoginArea(); }
+    out.className = 'ghost';
+    area.appendChild(out);
+  }
+}
+
+function openLoginModal(){
+  const user = prompt("Username (demo: reception / doctor):");
+  if(!user) return;
+  const pass = prompt("Password (demo: 1234):");
+  if(!pass) return;
+  const u = DB.users.find(x=>x.user===user && x.pass===pass);
+  if(u){ currentUser = u; alert("Logged in as "+u.name); renderLoginArea(); }
+  else alert("Invalid credentials");
+}
+
+/* -------------------------
+   FORM: new patient
+--------------------------*/
+function initForm(){
+  document.getElementById('uid').value = uid();
+  document.getElementById('newUID').onclick = ()=>{ document.getElementById('uid').value = uid(); };
+  document.getElementById('saveBtn').onclick = saveNewPatient;
+  document.getElementById('clearForm').onclick = clearForm;
+  document.getElementById('imgUpload').onchange = handleImgUpload;
+  document.getElementById('seedData').onclick = seedDemo;
+  document.getElementById('exportBtn').onclick = exportJSON;
+  document.getElementById('importBtn').onclick = ()=> document.getElementById('importFile').click();
+  document.getElementById('importFile').onchange = importJSON;
+  document.getElementById('clearAll').onclick = ()=>{ if(confirm('Clear all local data?')){ DB={patients:[],users:DB.users}; saveDB(); renderPatientList(); alert('Cleared.'); } }
+  document.getElementById('searchInp').oninput = renderPatientList;
+  document.getElementById('filterTreatment').onchange = renderPatientList;
+
+  // modal uploads
+  document.getElementById('modalImgUpload').onchange = handleModalImgUpload;
+}
+
+/* -------------------------
+   Image uploads (main form) - multiple images
+--------------------------*/
+function handleImgUpload(e){
+  const files = Array.from(e.target.files || []);
+  if(files.length===0) return;
+  const readers = files.map(f => new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=> res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(f);
+  }));
+  Promise.all(readers).then(results=>{
+    // append to tempFormImages
+    tempFormImages = tempFormImages.concat(results);
+    renderFormPreview();
+  }).catch(err=> console.error(err));
+}
+
+function renderFormPreview(){
+  const cont = document.getElementById('imgPreview');
+  cont.innerHTML = '';
+  tempFormImages.forEach((src, idx)=>{
+    const row = document.createElement('div'); row.className='img-list-row';
+    const im = document.createElement('img'); im.src = src; im.className='img-thumb';
+    const but = document.createElement('button'); but.className='ghost'; but.textContent='Remove'; but.onclick = ()=>{
+      if(confirm('Remove image?')){ tempFormImages.splice(idx,1); renderFormPreview(); }
+    };
+    row.appendChild(im); row.appendChild(but);
+    cont.appendChild(row);
+  });
+}
+
+/* -------------------------
+   Modal image uploads
+--------------------------*/
+function handleModalImgUpload(e){
+  const files = Array.from(e.target.files || []);
+  if(files.length===0) return;
+  const readers = files.map(f => new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=> res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(f);
+  }));
+  Promise.all(readers).then(results=>{
+    tempModalImages = tempModalImages.concat(results);
+    renderModalImages();
+  }).catch(err=> console.error(err));
+}
+function renderModalImages(){
+  const cont = document.getElementById('imgList'); cont.innerHTML='';
+  const p = findPatient(editingUID);
+  const existing = p && p.images ? p.images.slice() : [];
+  // show existing first with remove buttons (they are in DB)
+  existing.forEach((src, idx)=>{
+    const row = document.createElement('div'); row.className='img-list-row';
+    const im = document.createElement('img'); im.src = src; im.className='img-thumb';
+    const but = document.createElement('button'); but.className='ghost'; but.textContent='Remove'; but.onclick = ()=>{
+      if(confirm('Remove image?')){ p.images.splice(idx,1); saveDB(); renderModalImages(); renderPatientList(); }
+    };
+    row.appendChild(im); row.appendChild(but);
+    cont.appendChild(row);
+  });
+  // show temp modal images (not yet saved to patient DB)
+  tempModalImages.forEach((src, idx)=>{
+    const row = document.createElement('div'); row.className='img-list-row';
+    const im = document.createElement('img'); im.src = src; im.className='img-thumb';
+    const but = document.createElement('button'); but.className='ghost'; but.textContent='Remove'; but.onclick = ()=>{
+      if(confirm('Remove image?')){ tempModalImages.splice(idx,1); renderModalImages(); }
+    };
+    row.appendChild(im); row.appendChild(but);
+    cont.appendChild(row);
+  });
+}
+
+/* -------------------------
+   Clear & Save form
+--------------------------*/
+function clearForm(){
+  document.getElementById('uid').value = uid();
+  document.getElementById('fullname').value = '';
+  document.getElementById('age').value = '';
+  document.getElementById('address').value = '';
+  document.getElementById('contact').value = '';
+  document.getElementById('sex').value = 'Male';
+  document.getElementById('visitDate').value = todayISO();
+  document.getElementById('history').value = '';
+  document.getElementById('primaryTreatment').value = 'General Check-up';
+  document.getElementById('primaryPrice').value = '';
+  tempFormImages = [];
+  document.getElementById('imgPreview').innerHTML = '';
+  document.getElementById('formTitle').textContent = 'Register Patient';
+  editingUID = null;
+}
+
+function saveNewPatient(){
+  const pUID = document.getElementById('uid').value || uid();
+  const treatments = [];
+  const primaryName = document.getElementById('primaryTreatment').value;
+  const primaryPrice = Number(document.getElementById('primaryPrice').value || 0);
+  if(primaryName){
+    treatments.push({ name: primaryName, price: primaryPrice });
+  }
+  const p = {
+    uid: pUID,
+    name: document.getElementById('fullname').value.trim(),
+    age: document.getElementById('age').value,
+    address: document.getElementById('address').value,
+    contact: document.getElementById('contact').value,
+    sex: document.getElementById('sex').value,
+    visitDate: document.getElementById('visitDate').value || todayISO(),
+    history: document.getElementById('history').value,
+    treatments: treatments, // array of {name, price}
+    images: tempFormImages.slice(), // copy
+    createdAt: new Date().toISOString(),
+    rct: [],
+    restorations: [],
+    gums: [],
+    payments: [],
+    dentalMarks: []
+  };
+  if(!p.name){ alert('Name required'); return; }
+
+  if(editingUID){
+    const idx = DB.patients.findIndex(x=>x.uid===editingUID);
+    if(idx>=0){
+      // merge: don't wipe out existing treatments/images unless intentionally changed
+      DB.patients[idx] = {
+        ...DB.patients[idx],
+        ...p,
+        uid: editingUID
+      };
+      saveDB(); renderPatientList(); alert('Updated'); clearForm(); return;
+    }
+  }
+
+  DB.patients.unshift(p);
+  saveDB();
+  renderPatientList();
+  alert('Patient saved: ' + p.uid);
+  clearForm();
+}
+
+/* -------------------------
+  PATIENT LIST rendering
+--------------------------*/
+function renderPatientList(){
+  loadDB();
+  const q = document.getElementById('searchInp').value.toLowerCase();
+  const filterT = document.getElementById('filterTreatment').value;
+  const list = document.getElementById('patientList');
+  list.innerHTML = '';
+  const patients = DB.patients.filter(p=>{
+    if(filterT){
+      const has = (p.treatments||[]).some(t=> (t.name||'').toLowerCase().includes(filterT.toLowerCase()) );
+      if(!has) return false;
+    }
+    if(!q) return true;
+    return (p.name||'').toLowerCase().includes(q) || (p.uid||'').toLowerCase().includes(q) || (p.contact||'').toLowerCase().includes(q) || (p.treatments||[]).map(t=>t.name).join(' ').toLowerCase().includes(q);
+  });
+
+  if(patients.length===0){ list.innerHTML = '<div class="muted" style="padding:12px">No patients yet.</div>'; return; }
+
+  patients.forEach(p=>{
+    const row = document.createElement('div');
+    row.className = 'patient-row';
+    row.innerHTML = `
+      <div style="flex:1">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="width:44px;height:44px;border-radius:8px;background:#f3f9ff;display:grid;place-items:center;color:var(--brand);font-weight:800">${(p.name||' ')[0]||'P'}</div>
+          <div>
+            <div style="font-weight:700">${escapeHtml(p.name)}</div>
+            <div class="small">${p.age? p.age+' yrs • ' : ''}${p.contact || ''}</div>
+            <div class="small">${p.visitDate ? p.visitDate : ''}</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div class="uid">${p.uid}</div>
+        <div class="small">${renderPatientSummaryPrice(p)}</div>
+        <div class="actions">
+          <button class="ghost" data-uid="${p.uid}" onclick="openPatient(event)">Open</button>
+          <button data-uid="${p.uid}" onclick="quickEdit(event)" class="ghost">Edit</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function renderPatientSummaryPrice(p){
+  const total = computeEstimated(p);
+  return `Est: ${money(total)}`;
+}
+
+/* -------------------------
+   Open / Edit patient modal
+--------------------------*/
+function openPatient(e){
+  const uid = (e.currentTarget || e.target).dataset.uid;
+  const p = findPatient(uid);
+  if(!p) return alert('Patient not found');
+  editingUID = uid;
+  // fill modal fields
+  document.getElementById('mName').textContent = p.name;
+  document.getElementById('mUID').textContent = p.uid;
+  document.getElementById('mAge').textContent = p.age || '-';
+  document.getElementById('mSex').textContent = p.sex || '-';
+  document.getElementById('mContact').textContent = p.contact || '-';
+  document.getElementById('mAddress').textContent = p.address || '-';
+  document.getElementById('mHistory').textContent = p.history || '-';
+  document.getElementById('balanceLabel').textContent = 'Balance ' + computeBalance(p);
+
+  // treatments
+  const tlist = document.getElementById('treatmentList'); tlist.innerHTML='';
+  (p.treatments||[]).forEach((t, idx)=>{
+    const el = document.createElement('div'); el.className='chip';
+    el.innerHTML = `${escapeHtml(t.name)} • <strong>${money(t.price)}</strong> <button class="ghost" style="margin-left:8px" onclick="removeTreatment('${p.uid}', ${idx})">Remove</button>`;
+    tlist.appendChild(el);
+  });
+
+  // payments
+  renderPayments(p);
+
+  // RCT, restorations, gum lists
+  renderRctList(p); renderRestList(p); renderGumList(p);
+  // images
+  tempModalImages = [];
+  renderModalImages();
+  renderToothGrid(p);
+
+  // open modal
+  document.getElementById('patientModal').classList.add('open');
+
+  // handlers inside modal
+  document.getElementById('closeModal').onclick = ()=>{ document.getElementById('patientModal').classList.remove('open'); clearModalInputs(); editingUID=null; };
+  document.getElementById('addTreatmentBtn').onclick = ()=>{ addTreatmentToPatient(p.uid); };
+  document.getElementById('addRct').onclick = ()=>{ addRctToPatient(p.uid); };
+  document.getElementById('addRest').onclick = ()=>{ addRestToPatient(p.uid); };
+  document.getElementById('addGum').onclick = ()=>{ addGumToPatient(p.uid); };
+  document.getElementById('addPayment').onclick = ()=>{ addPaymentToPatient(p.uid); };
+  document.getElementById('savePatientEdits').onclick = ()=>{ saveModalEdits(p.uid); };
+  document.getElementById('deletePatient').onclick = ()=>{ if(confirm('Delete patient '+p.name+'?')){ DB.patients = DB.patients.filter(x=>x.uid!==p.uid); saveDB(); renderPatientList(); document.getElementById('patientModal').classList.remove('open'); } };
+  document.getElementById('downloadPDF').onclick = ()=>{ downloadInvoicePDF(p.uid); };
+  document.getElementById('refundPayment').onclick = ()=>{ alert('Refund demo — you can mark negative payment manually'); };
+  document.getElementById('clearRct').onclick = ()=>{ document.getElementById('rctTooth').value=''; document.getElementById('rctDate').value=''; document.getElementById('rctNotes').value=''; document.getElementById('rctPrice').value=''; };
+  document.getElementById('clearToothMarks').onclick = ()=>{ p.dentalMarks = []; saveDB(); renderToothGrid(p); renderToothMarksList(p); };
+}
+
+// quick edit - populate left form for editing
+function quickEdit(e){
+  const uid = (e.currentTarget || e.target).dataset.uid;
+  const p = findPatient(uid);
+  if(!p) return;
+  document.getElementById('uid').value = p.uid;
+  document.getElementById('fullname').value = p.name;
+  document.getElementById('age').value = p.age;
+  document.getElementById('address').value = p.address;
+  document.getElementById('contact').value = p.contact;
+  document.getElementById('sex').value = p.sex;
+  document.getElementById('visitDate').value = p.visitDate;
+  document.getElementById('history').value = p.history;
+  if(p.treatments && p.treatments[0]){ document.getElementById('primaryTreatment').value = p.treatments[0].name; document.getElementById('primaryPrice').value = p.treatments[0].price || ''; }
+  else { document.getElementById('primaryTreatment').value = 'General Check-up'; document.getElementById('primaryPrice').value=''; }
+  if(p.images && p.images[0]){ tempFormImages = p.images.slice(); renderFormPreview(); }
+  document.getElementById('formTitle').textContent = 'Edit Patient';
+  editingUID = p.uid;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* -------------------------
+  Treatments / RCT / Rest / Gum
+--------------------------*/
+function addTreatmentToPatient(uid){
+  const name = document.getElementById('quickTreatment').value;
+  const price = Number(document.getElementById('quickTreatmentPrice').value || 0);
+  if(!name){ alert('Select treatment'); return; }
+  const p = findPatient(uid);
+  if(!p.treatments) p.treatments = [];
+  p.treatments.push({ name, price });
+  saveDB(); renderRctList(p); renderRestList(p); renderGumList(p); renderPatientList();
+  // refresh modal UI
+  openPatient({currentTarget:{dataset:{uid:uid}}});
+  document.getElementById('quickTreatmentPrice').value = '';
+}
+
+function removeTreatment(uid, idx){
+  const p = findPatient(uid);
+  if(!p) return;
+  if(confirm('Remove treatment?')){ p.treatments.splice(idx,1); saveDB(); openPatient({currentTarget:{dataset:{uid:uid}}}); renderPatientList(); }
+}
+
+function addRctToPatient(uid){
+  const p = findPatient(uid);
+  const entry = {
+    tooth: document.getElementById('rctTooth').value || '-',
+    date: document.getElementById('rctDate').value || todayISO(),
+    stage: document.getElementById('rctStage').value,
+    notes: document.getElementById('rctNotes').value,
+    price: Number(document.getElementById('rctPrice').value || 0),
+    createdAt: new Date().toISOString()
+  };
+  p.rct = p.rct || [];
+  p.rct.unshift(entry);
+  saveDB(); renderRctList(p); document.getElementById('rctTooth').value=''; document.getElementById('rctNotes').value=''; document.getElementById('rctDate').value=''; document.getElementById('rctPrice').value='';
+  renderPatientList();
+}
+
+function renderRctList(p){
+  const el = document.getElementById('rctList'); el.innerHTML = '';
+  (p.rct||[]).forEach((r, i)=>{
+    const row = document.createElement('div'); row.style.border = '1px solid #eef6ff'; row.style.padding='8px'; row.style.marginBottom='8px'; row.style.borderRadius='8px';
+    row.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${r.stage}</strong> • Tooth ${r.tooth}</div><div class="small">${r.date}</div></div><div class="muted">${r.notes||''} • ${money(r.price)}</div>`;
+    el.appendChild(row);
+  });
+}
+
+function addRestToPatient(uid){
+  const p = findPatient(uid);
+  const entry = {
+    tooth: document.getElementById('restTooth').value || '-',
+    type: document.getElementById('restType').value,
+    shade: document.getElementById('restShade').value,
+    notes: document.getElementById('restNotes').value,
+    price: Number(document.getElementById('restPrice').value || 0),
+    createdAt: new Date().toISOString()
+  };
+  p.restorations = p.restorations || [];
+  p.restorations.unshift(entry);
+  saveDB(); renderRestList(p);
+  document.getElementById('restTooth').value=''; document.getElementById('restNotes').value=''; document.getElementById('restShade').value=''; document.getElementById('restPrice').value='';
+  renderPatientList();
+}
+
+function renderRestList(p){
+  const el = document.getElementById('restList'); el.innerHTML = '';
+  (p.restorations||[]).forEach(r=>{
+    const row = document.createElement('div'); row.style.border='1px solid #f2f8f8';row.style.padding='8px';row.style.marginBottom='8px';row.style.borderRadius='8px';
+    row.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${r.type}</strong> • Tooth ${r.tooth}</div><div class="small">${new Date(r.createdAt).toLocaleString()}</div></div><div class="muted">Shade: ${r.shade||'-'} • ${r.notes||''} • ${money(r.price)}</div>`;
+    el.appendChild(row);
+  });
+}
+
+function addGumToPatient(uid){
+  const p = findPatient(uid);
+  const entry = {
+    type: document.getElementById('gumType').value,
+    date: document.getElementById('gumDate').value || todayISO(),
+    notes: document.getElementById('gumNotes').value,
+    price: Number(document.getElementById('gumPrice').value || 0),
+    createdAt: new Date().toISOString()
+  };
+  p.gums = p.gums || [];
+  p.gums.unshift(entry);
+  saveDB(); renderGumList(p); document.getElementById('gumNotes').value=''; document.getElementById('gumDate').value=''; document.getElementById('gumPrice').value='';
+  renderPatientList();
+}
+
+function renderGumList(p){
+  const el = document.getElementById('gumList'); el.innerHTML = '';
+  (p.gums||[]).forEach(g=>{
+    const row = document.createElement('div'); row.style.border='1px solid #f7f7f8';row.style.padding='8px';row.style.marginBottom='8px';row.style.borderRadius='8px';
+    row.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${g.type}</strong></div><div class="small">${g.date}</div></div><div class="muted">${g.notes||''} • ${money(g.price)}</div>`;
+    el.appendChild(row);
+  });
+}
+
+/* -------------------------
+   Payments
+--------------------------*/
+function addPaymentToPatient(uid){
+  const p = findPatient(uid);
+  const amt = Number(document.getElementById('payAmount').value || 0);
+  if(!amt){ alert('Enter amount'); return; }
+  const pay = {
+    method: document.getElementById('payMethod').value,
+    amount: amt,
+    notes: document.getElementById('payNotes').value,
+    date: new Date().toISOString()
+  };
+  p.payments = p.payments || [];
+  p.payments.unshift(pay);
+  saveDB(); renderPayments(p); document.getElementById('payAmount').value=''; document.getElementById('payNotes').value='';
+  renderPatientList();
+}
+
+function renderPayments(p){
+  const el = document.getElementById('payHistory'); el.innerHTML='';
+  (p.payments||[]).forEach(pay=>{
+    const r = document.createElement('div'); r.style.padding='8px'; r.style.border='1px solid #eef5f9'; r.style.borderRadius='8px'; r.style.marginBottom='8px';
+    r.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${pay.method}</strong> • ${money(pay.amount)}</div><div class="small">${new Date(pay.date).toLocaleString()}</div></div><div class="muted">${pay.notes||''}</div>`;
+    el.appendChild(r);
+  });
+  document.getElementById('balanceLabel').textContent = 'Balance ' + computeBalance(p);
+}
+
+function computeEstimated(p){
+  let estimated = 0;
+  (p.treatments||[]).forEach(t => { estimated += Number(t.price||0); });
+  (p.restorations||[]).forEach(r => { estimated += Number(r.price||0); });
+  (p.rct||[]).forEach(r => { estimated += Number(r.price||0); });
+  (p.gums||[]).forEach(g => { estimated += Number(g.price||0); });
+  return estimated;
+}
+
+function computeBalance(p){
+  const estimated = computeEstimated(p);
+  const paid = (p.payments||[]).reduce((s,x)=>s+Number(x.amount||0),0);
+  const bal = estimated - paid;
+  return money(bal);
+}
+
+/* -------------------------
+   Dental chart (simple)
+--------------------------*/
+const toothNumbers = [
+  '18','17','16','15','14','13','12','11','21','22','23','24','25','26','27','28',
+  '48','47','46','45','44','43','42','41','31','32','33','34','35','36','37','38'
+];
+
+function renderToothGrid(p){
+  const grid = document.getElementById('toothGrid');
+  grid.innerHTML = '';
+  toothNumbers.forEach(tn=>{
+    const el = document.createElement('div');
+    el.className = 'tooth' + ((p.dentalMarks||[]).some(m=>m.tooth===tn) ? ' active' : '');
+    el.textContent = tn;
+    el.onclick = ()=> toggleToothMark(p.uid, tn);
+    grid.appendChild(el);
+  });
+  renderToothMarksList(p);
+}
+
+function toggleToothMark(uid, tooth){
+  const p = findPatient(uid);
+  p.dentalMarks = p.dentalMarks || [];
+  const idx = p.dentalMarks.findIndex(m=>m.tooth===tooth);
+  if(idx>=0){
+    p.dentalMarks.splice(idx,1);
+  } else {
+    const mark = { tooth, note: prompt('Note for tooth '+tooth+' (optional):') || '', date: new Date().toISOString() };
+    p.dentalMarks.push(mark);
+  }
+  saveDB();
+  renderToothGrid(p);
+}
+
+function renderToothMarksList(p){
+  const el = document.getElementById('toothMarksList'); el.innerHTML = '';
+  (p.dentalMarks||[]).forEach(m=>{
+    const d = document.createElement('div'); d.className='small'; d.style.padding='6px'; d.style.border='1px solid #eef7ff'; d.style.borderRadius='6px'; d.style.marginTop='6px';
+    d.innerHTML = `<strong>Tooth ${m.tooth}</strong> • ${m.note || '<span class="muted">no note</span>'} <div class="muted">${new Date(m.date).toLocaleString()}</div>`;
+    el.appendChild(d);
+  });
+}
+
+/* -------------------------
+  Images / X-rays rendering in modal
+--------------------------*/
+function renderImages(p){
+  const el = document.getElementById('imgList'); el.innerHTML='';
+  (p.images||[]).forEach((img, idx)=>{
+    const container = document.createElement('div'); container.style.display='flex'; container.style.gap='8px'; container.style.marginBottom='8px'; container.style.alignItems='center';
+    const im = document.createElement('img'); im.src = img; im.className='img-thumb';
+    const but = document.createElement('button'); but.className='ghost'; but.textContent='Remove'; but.onclick = ()=>{ if(confirm('Remove image?')){ p.images.splice(idx,1); saveDB(); renderModalImages(); renderPatientList(); } };
+    container.appendChild(im); container.appendChild(but); el.appendChild(container);
+  });
+}
+
+/* -------------------------
+  Save modal edits & clear
+--------------------------*/
+function saveModalEdits(uid){
+  const p = findPatient(uid);
+  if(!p) return;
+  // Append tempModalImages into p.images
+  p.images = p.images || [];
+  if(tempModalImages.length>0){
+    p.images = p.images.concat(tempModalImages);
+    tempModalImages = [];
+  }
+  saveDB(); renderPatientList(); alert('Saved.');
+  // refresh modal UI
+  openPatient({currentTarget:{dataset:{uid:uid}}});
+}
+
+function clearModalInputs(){
+  document.getElementById('rctTooth').value=''; document.getElementById('rctDate').value=''; document.getElementById('rctNotes').value=''; document.getElementById('rctPrice').value='';
+  document.getElementById('restTooth').value=''; document.getElementById('restNotes').value=''; document.getElementById('restShade').value=''; document.getElementById('restPrice').value='';
+  document.getElementById('gumNotes').value=''; document.getElementById('gumDate').value=''; document.getElementById('gumPrice').value=''; document.getElementById('payAmount').value=''; document.getElementById('payNotes').value='';
+}
+
+/* -------------------------
+  Export / Import JSON
+--------------------------*/
+function exportJSON(){
+  const data = JSON.stringify(DB, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nirankari-dental-db.json'; a.click();
+}
+
+function importJSON(e){
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=> {
+    try{
+      const obj = JSON.parse(r.result);
+      if(!obj.patients) throw new Error('Invalid file');
+      DB = obj; saveDB(); renderPatientList(); alert('Imported successfully');
+    }catch(err){ alert('Import failed: ' + err.message); }
+  };
+  r.readAsText(f);
+}
+
+/* -------------------------
+  PDF Invoice (client-side) - uses entered prices
+--------------------------*/
+async function downloadInvoicePDF(uid){
+  const p = findPatient(uid);
+  if(!p) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  doc.setFontSize(14); doc.setFont('helvetica','bold');
+  doc.text('NIRANKARI DENTAL CLINIC', 40, 60);
+  doc.setFontSize(11); doc.setFont('helvetica','normal');
+  doc.text(`Patient: ${p.name}`, 40, 90);
+  doc.text(`UID: ${p.uid}`, 40, 106);
+  doc.text(`Date: ${new Date().toLocaleDateString()}`, 40, 122);
+
+  // Compute items
+  let y = 150;
+  doc.setFontSize(12); doc.text('Items', 40, y); y += 18;
+  doc.setFontSize(11);
+
+  const items = [];
+  (p.treatments||[]).forEach(t => { items.push({desc: t.name, amount: Number(t.price||0)}); });
+  (p.restorations||[]).forEach(r => { items.push({desc: `Restoration ${r.type} (tooth ${r.tooth})`, amount: Number(r.price||0)}); });
+  (p.rct||[]).forEach(r => { items.push({desc: `RCT - ${r.stage} (tooth ${r.tooth})`, amount: Number(r.price||0)}); });
+  (p.gums||[]).forEach(g => { items.push({desc: `${g.type}`, amount: Number(g.price||0)}); });
+
+  if(items.length===0){
+    doc.text('No billable items recorded.', 40, y);
+    y += 20;
+  } else {
+    const pageWidth = doc.internal.pageSize.width;
+    items.forEach(it=>{
+      doc.text(it.desc, 40, y);
+      doc.text(money(it.amount), pageWidth - 60, y, {align:'right'});
+      y += 16;
+      if(y>720){ doc.addPage(); y=40; }
+    });
+  }
+
+  const subtotal = items.reduce((s,i)=>s+i.amount,0);
+  const paid = (p.payments||[]).reduce((s,x)=>s+Number(x.amount||0),0);
+  const balance = subtotal - paid;
+
+  y += 14;
+  doc.setFont('helvetica','bold'); doc.text('Subtotal', 40, y); doc.text(money(subtotal), doc.internal.pageSize.width - 60, y, {align:'right'});
+  y += 16;
+  doc.setFont('helvetica','normal'); doc.text('Paid', 40, y); doc.text(money(paid), doc.internal.pageSize.width - 60, y, {align:'right'});
+  y += 16;
+  doc.setFont('helvetica','bold'); doc.text('Balance', 40, y); doc.text(money(balance), doc.internal.pageSize.width - 60, y, {align:'right'});
+
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('Thank you for choosing NIRANKARI DENTAL CLINIC.', 40, y+40);
+  doc.save(`invoice_${p.uid}.pdf`);
+}
+
+/* -------------------------
+  Demo seed
+--------------------------*/
+function seedDemo(){
+  if(!confirm('Seed demo patients?')) return;
+  const demo = [
+    { uid: uid(), name: 'Asha Patel', age: 29, address:'Mumbai', contact:'98765 43210', sex:'Female', visitDate: todayISO(), history:'No major allergies', treatments:[{name:'General Check-up',price:500},{name:'Scaling & Polishing',price:800}], images:[], rct:[], restorations:[], gums:[], payments:[] },
+    { uid: uid(), name: 'Vikram Singh', age: 34, address:'Delhi', contact:'98100 11122', sex:'Male', visitDate: todayISO(), history:'Diabetic', treatments:[{name:'RCT',price:4000},{name:'Restoration - Permanent',price:2500}], images:[], rct:[{tooth:36,date:todayISO(),stage:'Access opening',notes:'Started',price:1500,createdAt:new Date().toISOString()}], restorations:[], gums:[], payments:[{method:'UPI',amount:2000,notes:'partial',date:new Date().toISOString()}] }
+  ];
+  DB.patients = demo.concat(DB.patients);
+  saveDB(); renderPatientList(); alert('Demo seeded');
+}
+
+/* -------------------------
+  Helper
+--------------------------*/
+function escapeHtml(text){ if(!text) return ''; return String(text).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+
+/* -------------------------
+  On load: wire global handlers for modal close by clicking backdrop
+--------------------------*/
+document.getElementById('patientModal').addEventListener('click', function(e){
+  if(e.target === this) { this.classList.remove('open'); editingUID=null; }
+});
+</script>
+</body>
+</html>
